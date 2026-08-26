@@ -1,0 +1,41 @@
+{
+  "name": "xxxignal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test:db": "node scripts/smoke-migration.mjs",
+    "cf:types": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply xxxignal --local",
+    "db:migrate:remote": "wrangler d1 migrations apply xxxignal --remote",
+    "db:console:local": "wrangler d1 execute xxxignal --local --command=\"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\"",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.2",
+    "hono": "4.13.4",
+    "lucide-react": "1.33.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router-dom": "7.18.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.53.1",
+    "@cloudflare/workers-types": "5.20260823.1",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitejs/plugin-react": "6.1.0",
+    "sass": "1.103.1",
+    "typescript": "6.0.3",
+    "vite": "8.2.2",
+    "wrangler": "4.125.0"
+  }
+}
