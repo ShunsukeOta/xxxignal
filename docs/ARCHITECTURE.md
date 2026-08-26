@@ -1,8 +1,4 @@
-# xxxignal Architecture — Phase 1
-
-## 目的
-
-Phase 1では「個人3アカウント運用」を実現する前に、将来の配布・販売で作り直さない境界を固定する。
+# xxxignal Architecture — Phase 2
 
 ## Runtime
 
@@ -10,69 +6,56 @@ Phase 1では「個人3アカウント運用」を実現する前に、将来の
 - API: Cloudflare Workers + Hono
 - Database: Cloudflare D1
 - ORM: Drizzle ORM
-- Auth boundary: Cloudflare Access / local dev adapter
-- Font: Noto Sans JP
-- X API: Phase 1では未使用
+- Auth: Cloudflare Access / local adapter
+- X Viewer: Official X Widgets
+- X API: not used in Phase 2
+- AI API: not used in Phase 2
 
-## Multi-tenant boundary
+## Tenant boundary
 
 ```text
 User
-  └─ Workspace
-      ├─ Workspace Member
-      ├─ X Account A
-      │   ├─ Strategy
-      │   └─ Voice Profile
-      ├─ X Account B
-      └─ X Account C
+└─ Workspace
+   ├─ X Accounts
+   │  ├─ Strategy
+   │  └─ Voice Profile
+   ├─ Research Sources
+   ├─ Research Targets
+   └─ Research Items
+      └─ optional Account binding
 ```
 
-全ての運用データは `workspace_id` で分離する。将来SaaS化しても、ユーザーごとのDBを分ける前提にはしない。
+すべてのResearch APIはSessionの`workspace_id`でscopeし、他Workspace IDを入力値として受け取らない。
+
+## Research boundary
+
+Research Itemは共通Poolを基本とし、必要な場合だけ`account_id`へ紐付ける。これにより同じニュース・RSSを複数アカウントごとに再取得しない。
 
 ## Authentication
 
-本番は `AUTH_MODE` 未指定時に `cloudflare-access` へフォールバックする。`wrangler.jsonc` にはLocal認証モードを定義しない。
+本番はCloudflare Accessを既定値とする。X認証とは独立したxxxignal自体のアクセス境界。
 
-- Worker APIは `Cf-Access-Authenticated-User-Email` を受け取り、ユーザーを解決する。
-- 初回アクセス時に User / Workspace / Workspace Member / 基本Settingを自動作成する。
-- ローカル開発のみ `.dev.vars` の `AUTH_MODE=local` を許可する。
-- Xのパスワード・Cookie・セッションは保存しない。
+## X integration policy
 
-## Account isolation
+Phase 2で許可:
 
-アカウント単位で以下を分離する。
+- x.comへの通常リンク
+- X公式WidgetsによるPublic Embed
 
-- Persona / basic profile
-- Target audience
-- Purpose
-- Monetization goal
-- Content pillars
-- Forbidden topics
-- Posting target
-- Voice profile
-- Preferred / banned phrases
-- Sample posts
+Phase 2で禁止:
 
-Phase 2以降のResearch、Draft、Analyticsも必ず `workspace_id` と `account_id` に紐づける。
+- X Cookie保存
+- Headless Browser login
+- unofficial GraphQL
+- automated engagement
+- X API
 
-## Authorization
+Phase 4で公式OAuth Providerを追加する。
 
-- Accountの作成・更新・アーカイブ・復元: owner / admin / editor
-- Workspace設定変更: owner / admin
-- viewerは読み取り専用
+## Audit / Archive
 
-Phase 1は個人ownerのみだが、販売時に権限制御を後付けしなくて済むようAPI境界で最初から強制する。
-
-## Audit
-
-作成・更新・アーカイブ・復元・Workspace設定変更は `audit_logs` に記録する。APIトークン等の秘密情報はAuditに保存しない。監査ログ書き込み失敗はサーバーログへ残し、成功済みユーザー操作を500として再実行させない。
-
-## Archive policy
-
-X Accountは物理削除せず `archived_at` を使う。将来の投稿履歴・収益データとの参照切れを防ぐため。
+Research Source / Target / Itemの作成・同期・Archive / RestoreをAudit対象にする。物理削除はしない。
 
 ## Cost policy
 
-Phase 1の外部APIコストは0円。
-
-Phase 4以降は `cost_ledger` を追加し、X API / AI APIの利用前後でコストを記録する。
+Phase 2まで外部APIコスト0円。Phase 4以降は`cost_ledger`でX API利用を記録する。
