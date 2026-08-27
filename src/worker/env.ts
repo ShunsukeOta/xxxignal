@@ -8,4 +8,9 @@ export interface Env {
   OPENAI_API_KEY?: string
   OPENAI_MODEL?: string
   OPENAI_BASE_URL?: string
+  X_CLIENT_ID?: string
+  X_CLIENT_SECRET?: string
+  X_REDIRECT_URI?: string
+  X_TOKEN_ENCRYPTION_KEY?: string
+  X_SCOPES?: string
 }

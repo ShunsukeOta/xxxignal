@@ -145,3 +145,124 @@ export interface VoiceMemoryInput { accountId: string; kind: VoiceMemoryKind; co
 
 export interface ApiEnvelope<T> { data: T }
 export interface ApiErrorPayload { error: { code: string; message: string; requestId?: string; fields?: Record<string, string> } }
+
+
+export type XConnectionStatus = 'connected' | 'error' | 'revoked'
+export type XInboxStatus = 'new' | 'read' | 'acted' | 'ignored'
+export type XSyncKind = 'posts' | 'mentions'
+
+export interface XConnection {
+  id: string
+  accountId: string
+  xUserId: string
+  username: string
+  displayName: string
+  scopes: string[]
+  status: XConnectionStatus
+  tokenExpiresAt: string | null
+  connectedAt: string
+  lastRefreshedAt: string | null
+  lastSyncedAt: string | null
+  lastError: string
+}
+
+export interface XMetricValues {
+  impressionCount: number
+  likeCount: number
+  replyCount: number
+  repostCount: number
+  quoteCount: number
+  bookmarkCount: number
+  urlLinkClicks: number
+  userProfileClicks: number
+}
+
+export interface XPostRecord {
+  id: string
+  accountId: string
+  xPostId: string
+  text: string
+  conversationId: string
+  lang: string
+  xCreatedAt: string | null
+  publicMetrics: Record<string, number>
+  nonPublicMetrics: Record<string, number>
+  organicMetrics: Record<string, number>
+  metrics: XMetricValues
+  fetchedAt: string
+}
+
+export interface XInboxItem {
+  id: string
+  accountId: string
+  xPostId: string
+  authorId: string
+  text: string
+  xCreatedAt: string | null
+  publicMetrics: Record<string, number>
+  status: XInboxStatus
+  firstSeenAt: string
+  updatedAt: string
+}
+
+export interface XBudgetSettings {
+  monthlyBudgetUsd: number
+  warningPercent: number
+  hardLimitEnabled: boolean
+}
+
+export interface XCostEntry {
+  id: string
+  accountId: string | null
+  operation: string
+  endpoint: string
+  resourceType: string
+  units: number
+  unitCostUsd: number
+  estimatedCostUsd: number
+  pricingVersion: string
+  requestId: string
+  createdAt: string
+}
+
+export interface XCostSummary {
+  month: string
+  spentUsd: number
+  budgetUsd: number
+  remainingUsd: number
+  usagePercent: number
+  warning: boolean
+  hardLimitReached: boolean
+  pricingVersion: string
+  entries: XCostEntry[]
+}
+
+export interface XAccountHealth {
+  accountId: string
+  connected: boolean
+  status: 'healthy' | 'warning' | 'error' | 'disconnected'
+  tokenState: 'valid' | 'expiring' | 'expired' | 'missing'
+  lastSyncedAt: string | null
+  lastError: string
+}
+
+export interface XAnalyticsOverview {
+  configured: boolean
+  callbackUrl: string | null
+  scopes: string[]
+  connections: XConnection[]
+  posts: XPostRecord[]
+  inbox: XInboxItem[]
+  cost: XCostSummary
+  budget: XBudgetSettings
+  health: XAccountHealth[]
+}
+
+export interface XSyncResult {
+  kind: XSyncKind
+  accountId: string
+  returned: number
+  cached: boolean
+  estimatedCostUsd: number
+  syncedAt: string
+}
