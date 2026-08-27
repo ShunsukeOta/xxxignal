@@ -131,7 +131,7 @@ function learningDto(row: typeof weeklyLearnings.$inferSelect): WeeklyLearning {
     weekStart: row.weekStart,
     scope: row.scope,
     summary: row.summary,
-    winners: parseArray(row.winnersJson),
+    winners: parseArray<WeeklyLearning['winners'][number]>(row.winnersJson),
     observations: parseArray<string>(row.observationsJson),
     recommendations: parseArray<string>(row.recommendationsJson),
     sampleSize: row.sampleSize,

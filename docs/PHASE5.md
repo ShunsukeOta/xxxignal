@@ -142,7 +142,7 @@ Account単位で以下を保存:
 2. Click Eventを記録
 3. destination URLへ302 Redirect
 
-元URLを改変しない。
+元URLを改変しない。\n\n### Cloudflare Access deployment\n\nRevenue Trackingを外部ユーザー向けに使う場合、`/r/*` は公開到達可能である必要がある。\n\n- App / `/api/*`: Cloudflare Accessで保護\n- `/r/*`: 公開tracking route\n\nホスト全体をAccessで遮断する構成では外部Clickを記録できないため、Path policyまたはpublic tracking用hostnameを分離する。
 
 ### Events
 
