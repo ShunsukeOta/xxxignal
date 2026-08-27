@@ -2,50 +2,77 @@
 
 ## Principles
 
-- Monochrome主体
-- Noto Sans JPのみ使用
-- PC / SPで情報構造を共通化
-- SPは片手操作を優先
-- 8px前後の角丸、1px境界線
-- 装飾より状態・優先順位・可読性
-- デモ値を入れない
-
-## Tokens
-
-| Token | Value |
-|---|---|
-| Black | `#0B0B0B` |
-| Gray 900 | `#242424` |
-| Gray 700 | `#575757` |
-| Gray 500 | `#8B8B8B` |
-| Gray 300 | `#CFCFCF` |
-| Border | `#E5E5E5` |
-| Background | `#F7F7F7` |
-| White | `#FFFFFF` |
-| Radius | `8 / 12 / 16px` |
-| Spacing | `4 / 8 / 12 / 16 / 24 / 32 / 48px` |
-
-## Typography
-
+- Monochrome first
 - Noto Sans JP
-- Page title: 28px / 700 (SP 23px)
-- Section title: 15–17px / 700
-- Body: 14px / 400
-- UI: 12–13px / 500–600
-- Caption: 10–11px
+- 操作状態を色だけに依存しない
+- PCは情報密度、SPは片手操作を優先
+- 同じButton / Field / Modal / Empty Stateを全Phaseで再利用
 
-## Components through Phase 2
+## Phase 3 patterns
 
-- App shell / Sidebar / Mobile bottom navigation
-- Stat card / Panel / Account card
-- Buttons / Fields / Select / Textarea / Tag input
-- Modal / SP full-screen sheet
-- Toast / Empty / Skeleton
-- Research tabs
-- Research list row
-- Research search
-- Source / Target / Item cards
-- Archive / Restore state
-- X Official Embed container
+### Content Studio
 
-Phase 3以降も既存Componentとtokenを拡張し、別系統のUI体系を作らない。
+- Desktop: Compose 2-column
+  - AI Assist
+  - Manual Draft
+- Mobile: 1-column
+- Candidate Cardは`Angle / Title / Hook / Body / Duplicate / Action`の順序を固定
+
+### Duplicate state
+
+色だけでなく必ず数値を表示する。
+
+- None: `類似 0%`
+- Low: `類似 35%+`
+- Medium: `類似 65%+`
+- High: `類似 82%+`
+
+Highは承認禁止にはせず、人間判断を促す。
+
+### Human Review
+
+Review Cardは本文が最も大きい情報。
+
+Primary action: 承認
+Secondary action: 却下
+
+却下は理由Modalを必ず経由する。
+
+### Voice Memory
+
+種類は3つ。
+
+- preference
+- avoidance
+- observation
+
+自動学習に見えないよう、Reject時の`Voice Memoryへ保存`は明示Toggleにする。
+
+### Publish Assist
+
+Approvedだけを表示。
+
+- コピー
+- Xで開く
+- 投稿済みにする
+
+`投稿済みにする`前に「Xへ自動投稿する操作ではない」ことを確認Modalで示す。
+
+## Responsive
+
+### >= 1100px
+
+- Compose / Voice Memoryは2-column
+
+### 761–1099px
+
+- 主要フォームを1-columnへ
+- Draft / Approval Cardは必要に応じ2-column
+
+### <= 760px
+
+- Bottom navigation
+- Card 1-column
+- Modal full screen
+- Footer actionsは横幅を最大利用
+- safe-areaを考慮
