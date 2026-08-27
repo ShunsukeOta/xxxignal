@@ -7,7 +7,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const migrationsDir = resolve(here, '../migrations')
 const migrationFiles = readdirSync(migrationsDir).filter((name) => /^\d+_.+\.sql$/.test(name)).sort()
 
-if (migrationFiles.length !== 3) throw new Error(`Expected 3 migrations, found ${migrationFiles.length}: ${migrationFiles.join(', ')}`)
+if (migrationFiles.length !== 4) throw new Error(`Expected 4 migrations, found ${migrationFiles.length}: ${migrationFiles.join(', ')}`)
 
 const db = new DatabaseSync(':memory:')
 for (const file of migrationFiles) db.exec(readFileSync(resolve(migrationsDir, file), 'utf8'))
@@ -28,6 +28,15 @@ const expectedTables = [
   'workspace_members',
   'workspaces',
   'x_accounts',
+  'x_api_cache',
+  'x_budget_settings',
+  'x_connections',
+  'x_cost_ledger',
+  'x_engagement_inbox',
+  'x_oauth_states',
+  'x_post_metric_snapshots',
+  'x_posts',
+  'x_sync_runs',
 ].sort()
 
 const actualTables = db.prepare(`
@@ -109,6 +118,63 @@ try {
   invalidMemoryActiveBlocked = true
 }
 if (!invalidMemoryActiveBlocked) throw new Error('voice memory active CHECK constraint is not enforced')
+
+
+db.prepare(`
+  INSERT INTO x_connections (
+    id,workspace_id,account_id,x_user_id,username,display_name,access_token_enc,refresh_token_enc,scopes,status,connected_at,created_at,updated_at
+  ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+`).run('xcn_a','ws_test','xac_a','1001','account_a','Account A','enc-access','enc-refresh','tweet.read users.read offline.access','connected',timestamp,timestamp,timestamp)
+
+let duplicateConnectionBlocked = false
+try {
+  db.prepare(`
+    INSERT INTO x_connections (
+      id,workspace_id,account_id,x_user_id,username,display_name,access_token_enc,refresh_token_enc,scopes,status,connected_at,created_at,updated_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+  `).run('xcn_b','ws_test','xac_a','1002','account_b','Account B','enc-access','enc-refresh','tweet.read users.read offline.access','connected',timestamp,timestamp,timestamp)
+} catch {
+  duplicateConnectionBlocked = true
+}
+if (!duplicateConnectionBlocked) throw new Error('x connection account unique constraint is not enforced')
+
+db.prepare('INSERT INTO x_budget_settings (workspace_id,monthly_budget_microusd,warning_percent,hard_limit_enabled,updated_at,updated_by_user_id) VALUES (?,?,?,?,?,?)')
+  .run('ws_test', 5000000, 80, 1, timestamp, 'usr_test')
+
+let invalidBudgetHardLimitBlocked = false
+try {
+  db.prepare('UPDATE x_budget_settings SET hard_limit_enabled=2 WHERE workspace_id=?').run('ws_test')
+} catch {
+  invalidBudgetHardLimitBlocked = true
+}
+if (!invalidBudgetHardLimitBlocked) throw new Error('x budget hard limit CHECK constraint is not enforced')
+
+db.prepare(`
+  INSERT INTO x_posts (
+    id,workspace_id,account_id,x_post_id,text,public_metrics_json,non_public_metrics_json,organic_metrics_json,fetched_at,created_at,updated_at
+  ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+`).run('xps_a','ws_test','xac_a','2001','Post body','{}','{}','{}',timestamp,timestamp,timestamp)
+
+let duplicateXPostBlocked = false
+try {
+  db.prepare(`
+    INSERT INTO x_posts (
+      id,workspace_id,account_id,x_post_id,text,public_metrics_json,non_public_metrics_json,organic_metrics_json,fetched_at,created_at,updated_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+  `).run('xps_b','ws_test','xac_a','2001','Duplicate','{}','{}','{}',timestamp,timestamp,timestamp)
+} catch {
+  duplicateXPostBlocked = true
+}
+if (!duplicateXPostBlocked) throw new Error('x post unique constraint is not enforced')
+
+let invalidInboxStatusBlocked = false
+try {
+  db.prepare('INSERT INTO x_engagement_inbox (id,workspace_id,account_id,x_post_id,status,first_seen_at,updated_at) VALUES (?,?,?,?,?,?,?)')
+    .run('xin_bad','ws_test','xac_a','3001','invalid',timestamp,timestamp)
+} catch {
+  invalidInboxStatusBlocked = true
+}
+if (!invalidInboxStatusBlocked) throw new Error('x inbox status CHECK constraint is not enforced')
 
 db.close()
 console.log(`Migration smoke test passed (${migrationFiles.length} migrations / ${expectedTables.length} tables).`)

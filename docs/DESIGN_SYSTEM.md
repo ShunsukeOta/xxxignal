@@ -76,3 +76,65 @@ Approvedだけを表示。
 - Modal full screen
 - Footer actionsは横幅を最大利用
 - safe-areaを考慮
+
+
+## Phase 4 patterns
+
+### OAuth Connection Card
+
+- Account名 / @handle
+- Health badge
+- Token state
+- Last sync
+- Primary: Xを接続
+- Connected時: Posts同期 / Mentions同期 / 解除
+
+Healthは色だけでなくtext labelを必ず表示する。
+
+### Analytics Table
+
+PCは横スクロール可能なtable。
+SPでもcolumnを無理に潰さず、横スクロールで数値を維持する。
+
+表示:
+- Post
+- Account
+- Impression
+- Like
+- Reply
+- Repost
+- Profile Click
+- Link Click
+
+### Cost Ledger
+
+- 今月推定Cost
+- Budget
+- Progress meter
+- Pricing snapshot
+- resource count
+- endpoint
+
+Dollar表示は小数4桁まで出し、$0.0000と$0.0050を区別できるようにする。
+
+### Budget Guard
+
+Danger操作ではなくProtection設定として扱う。
+
+- Monthly Budget
+- Warning %
+- Hard Limit toggle
+
+Hard Limit有効時はAPI requestを送る前に停止する旨を明記する。
+
+### Engagement Inbox
+
+自動返信UIにしない。
+
+- Post本文
+- Account
+- Xで開く
+- 確認済み
+- 無視
+
+人間操作をPrimary workflowとする。
