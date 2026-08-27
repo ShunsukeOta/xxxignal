@@ -10,6 +10,13 @@ export type UiDensity = 'comfortable' | 'compact'
 export type ResearchSourceKind = 'rss' | 'web' | 'manual'
 export type ResearchTargetRole = 'competitor' | 'target' | 'reference'
 export type ResearchItemKind = 'rss' | 'web' | 'x_post' | 'manual'
+export type DraftStatus = 'draft' | 'review' | 'approved' | 'rejected' | 'published'
+export type DraftTargetAction = 'engagement' | 'reply' | 'profile_click' | 'share' | 'dwell' | 'follow' | 'conversion'
+export type DraftVersionSource = 'manual' | 'ai' | 'edit'
+export type DraftFeedbackDecision = 'submit' | 'approve' | 'reject' | 'publish' | 'note'
+export type DraftRejectReason = '' | 'off_voice' | 'too_generic' | 'too_salesy' | 'fact_risk' | 'duplicate' | 'weak_hook' | 'other'
+export type VoiceMemoryKind = 'preference' | 'avoidance' | 'observation'
+export type AiProviderName = 'template' | 'openai'
 
 export interface SessionUser { id: string; email: string; displayName: string }
 export interface SessionWorkspace { id: string; name: string; slug: string; plan: 'personal' | 'beta' | 'pro'; role: WorkspaceRole }
@@ -49,6 +56,92 @@ export interface ResearchTargetInput { handle: string; displayName: string; role
 export interface ResearchItem { id: string; workspaceId: string; sourceId: string | null; accountId: string | null; title: string; url: string; summary: string; topic: string; kind: ResearchItemKind; externalKey: string; publishedAt: string | null; createdAt: string; updatedAt: string; archivedAt: string | null }
 export interface ResearchItemInput { title: string; url: string; summary: string; topic: string; kind: ResearchItemKind; accountId: string | null }
 export interface ResearchOverview { sources: ResearchSource[]; targets: ResearchTarget[]; items: ResearchItem[] }
+
+export interface ContentDraft {
+  id: string
+  workspaceId: string
+  accountId: string
+  researchItemId: string | null
+  title: string
+  targetAction: DraftTargetAction
+  status: DraftStatus
+  currentVersion: number
+  currentHook: string
+  currentBody: string
+  currentAngle: string
+  contentHash: string
+  duplicateScore: number
+  duplicateDraftId: string | null
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
+  publishedAt: string | null
+  archivedAt: string | null
+}
+export interface DraftVersion {
+  id: string
+  workspaceId: string
+  draftId: string
+  versionNumber: number
+  hook: string
+  body: string
+  angle: string
+  source: DraftVersionSource
+  aiProvider: string
+  aiModel: string
+  aiMetadata: Record<string, unknown>
+  createdByUserId: string
+  createdAt: string
+}
+export interface DraftFeedback {
+  id: string
+  workspaceId: string
+  draftId: string
+  versionId: string | null
+  userId: string
+  decision: DraftFeedbackDecision
+  reasonCode: DraftRejectReason
+  comment: string
+  createdAt: string
+}
+export interface VoiceMemory {
+  id: string
+  workspaceId: string
+  accountId: string
+  kind: VoiceMemoryKind
+  content: string
+  source: 'manual' | 'feedback'
+  sourceDraftId: string | null
+  createdByUserId: string
+  active: boolean
+  createdAt: string
+  updatedAt: string
+  archivedAt: string | null
+}
+export interface DraftCreateInput {
+  accountId: string
+  researchItemId: string | null
+  title: string
+  targetAction: DraftTargetAction
+  hook: string
+  body: string
+  angle: string
+  source?: DraftVersionSource
+  aiProvider?: string
+  aiModel?: string
+  aiMetadata?: Record<string, unknown>
+}
+export interface DraftUpdateInput { title?: string; targetAction?: DraftTargetAction; hook: string; body: string; angle: string }
+export interface DraftStatusInput { status: Extract<DraftStatus, 'review' | 'approved' | 'rejected' | 'published'>; reasonCode?: DraftRejectReason; comment?: string; remember?: boolean }
+export interface DraftDetail { draft: ContentDraft; versions: DraftVersion[]; feedback: DraftFeedback[] }
+export interface ContentOverview { drafts: ContentDraft[]; archivedDrafts: ContentDraft[]; voiceMemories: VoiceMemory[] }
+export interface DuplicateMatch { draftId: string; title: string; score: number; exact: boolean }
+export interface DuplicateCheckResult { score: number; level: 'none' | 'low' | 'medium' | 'high'; match: DuplicateMatch | null; contentHash: string }
+export interface GeneratedDraftCandidate { title: string; hook: string; body: string; angle: string; targetAction: DraftTargetAction; duplicate: DuplicateCheckResult }
+export interface AiProviderStatus { provider: AiProviderName; configured: boolean; external: boolean; model: string | null; note: string }
+export interface GenerateDraftInput { accountId: string; researchItemId: string | null; targetAction: DraftTargetAction; instruction: string; count: 1 | 2 | 3 }
+export interface GenerateDraftResult { candidates: GeneratedDraftCandidate[]; provider: AiProviderName; model: string | null; usage: { inputTokens: number | null; outputTokens: number | null } }
+export interface VoiceMemoryInput { accountId: string; kind: VoiceMemoryKind; content: string }
 
 export interface ApiEnvelope<T> { data: T }
 export interface ApiErrorPayload { error: { code: string; message: string; requestId?: string; fields?: Record<string, string> } }

@@ -1,3 +1,11 @@
 AUTH_MODE=local
 LOCAL_USER_EMAIL=owner@xxxignal.local
 LOCAL_USER_NAME=Owner
+
+# Phase 3 AI Provider
+# template: 外部APIを使わない0円モード（既定）
+# openai: OPENAI_API_KEY / OPENAI_MODELを設定した時だけ外部APIを呼びます
+AI_PROVIDER=template
+# OPENAI_API_KEY=
+# OPENAI_MODEL=
+# OPENAI_BASE_URL=https://api.openai.com/v1

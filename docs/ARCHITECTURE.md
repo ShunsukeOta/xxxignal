@@ -1,4 +1,4 @@
-# xxxignal Architecture — Phase 2
+# xxxignal Architecture — Phase 3
 
 ## Runtime
 
@@ -8,8 +8,8 @@
 - ORM: Drizzle ORM
 - Auth: Cloudflare Access / local adapter
 - X Viewer: Official X Widgets
-- X API: not used in Phase 2
-- AI API: not used in Phase 2
+- AI: Provider Adapter (`template` / optional `openai`)
+- X API: not used until Phase 4
 
 ## Tenant boundary
 
@@ -18,44 +18,71 @@ User
 └─ Workspace
    ├─ X Accounts
    │  ├─ Strategy
-   │  └─ Voice Profile
+   │  ├─ Voice Profile
+   │  ├─ Voice Memory
+   │  └─ Content Drafts
+   │      ├─ Versions
+   │      └─ Feedback
    ├─ Research Sources
    ├─ Research Targets
    └─ Research Items
-      └─ optional Account binding
 ```
 
-すべてのResearch APIはSessionの`workspace_id`でscopeし、他Workspace IDを入力値として受け取らない。
+APIはクライアントから`workspace_id`を受け取らない。Sessionで解決したWorkspaceへ必ずscopeする。
 
-## Research boundary
+## Content boundary
 
-Research Itemは共通Poolを基本とし、必要な場合だけ`account_id`へ紐付ける。これにより同じニュース・RSSを複数アカウントごとに再取得しない。
+Draftは`account_id`必須。Research Itemは任意。
 
-## Authentication
+- Account Strategy / Voiceは他Accountと共有しない
+- Draft Duplicate GuardはPhase 3では同一Accountのみ
+- Cross-account GuardはPhase 5
+- Published Draftは履歴保全のためArchiveを禁止
 
-本番はCloudflare Accessを既定値とする。X認証とは独立したxxxignal自体のアクセス境界。
+## AI boundary
 
-## X integration policy
+Provider interfaceをContent Routeから分離する。
 
-Phase 2で許可:
+```text
+Content Route
+   ↓
+AiProvider
+├─ TemplateAiProvider
+└─ OpenAiProvider
+```
 
-- x.comへの通常リンク
-- X公式WidgetsによるPublic Embed
+Provider secretはEnvのみ。DB、Audit Log、Frontendへ返さない。
 
-Phase 2で禁止:
+### External content safety
 
-- X Cookie保存
-- Headless Browser login
-- unofficial GraphQL
-- automated engagement
-- X API
+Research ItemはPrompt Injectionを含む可能性があるため未信頼データとして扱う。System instructionとResearch blockを分離し、Research内の指示よりAccount Policyを優先する。
 
-Phase 4で公式OAuth Providerを追加する。
+## Review boundary
 
-## Audit / Archive
+AI生成結果を直接Publishedへ遷移できない。
 
-Research Source / Target / Itemの作成・同期・Archive / RestoreをAudit対象にする。物理削除はしない。
+```text
+draft → review → approved → published
+                ↘ rejected
+```
 
-## Cost policy
+人間の明示操作なしにApprove / Publishしない。
 
-Phase 2まで外部APIコスト0円。Phase 4以降は`cost_ledger`でX API利用を記録する。
+## Cost boundary
+
+- Template Provider: 0円
+- Duplicate Guard: 0円
+- X Viewer: X API 0円
+- OpenAI Provider: 呼び出した時だけ従量課金
+
+Phase 4まではCost LedgerがないためOpenAIを既定にしない。
+
+## Audit
+
+以下をAudit対象にする。
+
+- Draft create / edit / review / approve / reject / publish / archive / restore
+- AI generation（Provider / Model / 件数のみ）
+- Voice Memory create / archive
+
+Prompt本文、API Key、SecretはAuditへ保存しない。
