@@ -138,3 +138,70 @@ Hard Limit有効時はAPI requestを送る前に停止する旨を明記する�
 - 無視
 
 人間操作をPrimary workflowとする。
+
+
+## Phase 5 patterns
+
+### Operations page
+
+毎日の判断を1画面に集約する。
+
+Tabs:
+
+- Opportunity
+- Calendar
+- Weekly Learning
+- Cross Guard
+- Backup
+
+主要Actionは各Tabで1つに絞る。
+
+### Opportunity Card
+
+- Scoreを最も強く表示
+- Source / Account
+- Title / Summary
+- Urgency / Fit
+- 予定化 / 完了 / 除外
+
+Scoreは推薦ではなく優先順位候補として扱う。
+
+### Calendar Row
+
+- 日付
+- 時刻
+- Account
+- Kind
+- Title
+- Status
+
+PC / SPとも日時とAccountを隠さない。
+
+### Guard
+
+危険色だけに依存せず、数値・Account名・対象Titleを必ず表示する。
+
+Cross-account DuplicateはSimilarity %を表示する。
+
+### Revenue Card
+
+- Account
+- Label
+- Destination
+- Click
+- Conversion
+- Revenue
+- Tracking URL copy
+
+Currencyが複数ある場合は合算せず、Currencyごとに表示する。
+
+### Backup
+
+Backup Actionには以下を明記する。
+
+- Secret excluded
+- SHA-256 checksum
+- JSON
+- versioned format
+
+Exportを「完全復元保証」と表現しない。

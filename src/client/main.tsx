@@ -5,6 +5,7 @@ import './styles/app.scss'
 import './styles/research.scss'
 import './styles/content.scss'
 import './styles/analytics.scss'
+import './styles/production.scss'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('root element is missing')

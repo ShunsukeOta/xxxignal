@@ -266,3 +266,116 @@ export interface XSyncResult {
   estimatedCostUsd: number
   syncedAt: string
 }
+
+export type OpportunityStatus = 'new' | 'planned' | 'done' | 'dismissed'
+export type CalendarItemStatus = 'planned' | 'done' | 'cancelled'
+export type CalendarItemKind = 'publish' | 'followup' | 'research' | 'manual'
+export type AttributionEventKind = 'click' | 'conversion' | 'revenue'
+
+export interface Opportunity {
+  id: string
+  accountId: string | null
+  sourceType: 'research' | 'mention' | 'manual'
+  sourceId: string
+  title: string
+  summary: string
+  score: number
+  urgency: number
+  fit: number
+  evidence: Record<string, unknown>
+  status: OpportunityStatus
+  scheduledAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CalendarItem {
+  id: string
+  accountId: string
+  draftId: string | null
+  opportunityId: string | null
+  kind: CalendarItemKind
+  title: string
+  scheduledFor: string
+  status: CalendarItemStatus
+  notes: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WeeklyLearning {
+  id: string
+  accountId: string | null
+  weekStart: string
+  scope: 'workspace' | 'account'
+  summary: string
+  winners: Array<{ xPostId: string; text: string; score: number; impressions: number; interactions: number }>
+  observations: string[]
+  recommendations: string[]
+  sampleSize: number
+  generatedAt: string
+}
+
+export interface CrossAccountDuplicateIssue {
+  leftDraftId: string
+  leftAccountId: string
+  leftTitle: string
+  rightDraftId: string
+  rightAccountId: string
+  rightTitle: string
+  score: number
+}
+
+export interface EngagementOverlapIssue {
+  key: string
+  authorId: string
+  xPostId: string
+  accountIds: string[]
+  text: string
+}
+
+export interface OperationsOverview {
+  opportunities: Opportunity[]
+  calendar: CalendarItem[]
+  learnings: WeeklyLearning[]
+  duplicateIssues: CrossAccountDuplicateIssue[]
+  engagementIssues: EngagementOverlapIssue[]
+  approvedDrafts: ContentDraft[]
+  exportSummary: {
+    accounts: number
+    researchItems: number
+    drafts: number
+    xPosts: number
+    attributionLinks: number
+  }
+}
+
+export interface AttributionLink {
+  id: string
+  accountId: string
+  draftId: string | null
+  label: string
+  destinationUrl: string
+  trackingKey: string
+  active: boolean
+  createdAt: string
+  updatedAt: string
+  clicks: number
+  conversions: number
+  revenueByCurrency: Record<string, number>
+}
+
+export interface RevenueOverview {
+  links: AttributionLink[]
+  totalsByCurrency: Record<string, number>
+  totalClicks: number
+  totalConversions: number
+}
+
+export interface WorkspaceBackup {
+  version: 1
+  generatedAt: string
+  checksumSha256: string
+  data: Record<string, unknown>
+}
+

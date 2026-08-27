@@ -8,6 +8,8 @@ import { AnalyticsPage } from './pages/AnalyticsPage'
 import { ContentStudioPage } from './pages/ContentStudioPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { PublishAssistPage } from './pages/PublishAssistPage'
+import { OperationsPage } from './pages/OperationsPage'
+import { RevenuePage } from './pages/RevenuePage'
 import { ResearchPage } from './pages/ResearchPage'
 import { SettingsPage } from './pages/SettingsPage'
 
@@ -25,6 +27,8 @@ export default function App() {
               <Route path="/approvals" element={<ApprovalQueuePage />} />
               <Route path="/calendar" element={<PublishAssistPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/operations" element={<OperationsPage />} />
+              <Route path="/revenue" element={<RevenuePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

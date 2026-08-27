@@ -144,6 +144,6 @@ export async function ensureSession(env: Env, request: Request): Promise<Session
       accountLimit,
       activeAccountCount: accountCount?.value ?? 0,
     },
-    phase: 4,
+    phase: 5,
   }
 }

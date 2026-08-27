@@ -1,4 +1,4 @@
-# xxxignal Architecture — Phase 4
+# xxxignal Architecture — Phase 5
 
 ## Runtime
 
@@ -151,3 +151,76 @@ Workspace
 ```
 
 Token値、Client Secret、暗号化KeyをAudit / Cost / Metricsへ保存しない。
+
+
+## Production MVP boundary
+
+Phase 5は新しい外部APIを増やさず、Phase 1〜4で保存したデータを運用判断へ変換する。
+
+```text
+Research / Mentions
+  ↓
+Opportunity Ranking
+  ↓
+Calendar / Queue
+  ↓
+Draft / Review / Publish Assist
+  ↓
+X Metrics / Attribution
+  ↓
+Weekly Learning
+```
+
+### Opportunity
+
+Research / Mention / Manualを0〜100のScoreへ変換する。AI推定ではなく、鮮度・Account Fit・保存済みMetricsによる決定論的計算。
+
+### Calendar
+
+実行予定を管理するだけで、自動投稿Schedulerではない。
+
+### Weekly Learning
+
+保存済みOwn Post Metricsだけを直近7日で集計する。Sample不足時は推定値を作らない。
+
+### Cross-account Guard
+
+- Draft: Workspace内の別Account間で3-gram類似度を比較
+- Engagement: 同一Mention候補が複数Accountに存在する場合を警告
+
+自動ブロック・自動Engagementは行わない。
+
+## Attribution boundary
+
+公開Route `/r/{tracking_key}` はランダムKeyに対応するactive Linkだけを302 Redirectする。
+
+Clickのみ自動記録し、Conversion / RevenueはPhase 5では手動記録。
+
+異なるCurrencyを自動換算しない。
+
+## Backup boundary
+
+Workspace Exportは主要テーブルをJSON化するが、以下を含めない。
+
+- X Access Token
+- X Refresh Token
+- PKCE verifier
+- X Client Secret
+- X Token Encryption Key
+- OpenAI API Key
+
+X Connectionは安全なmetadataだけをselectする。
+
+Export payloadは`version: 1`とSHA-256 checksumを持つ。
+
+## Phase 4 hardening
+
+Phase 5でWorker route registrationを明示する。
+
+```text
+/api/x
+/api/production
+/r/{tracking_key}
+```
+
+Phase 4でimport済みだった`xRoutes`が未mountだった問題を修正する。

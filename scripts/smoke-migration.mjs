@@ -7,7 +7,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const migrationsDir = resolve(here, '../migrations')
 const migrationFiles = readdirSync(migrationsDir).filter((name) => /^\d+_.+\.sql$/.test(name)).sort()
 
-if (migrationFiles.length !== 4) throw new Error(`Expected 4 migrations, found ${migrationFiles.length}: ${migrationFiles.join(', ')}`)
+if (migrationFiles.length !== 5) throw new Error(`Expected 5 migrations, found ${migrationFiles.length}: ${migrationFiles.join(', ')}`)
 
 const db = new DatabaseSync(':memory:')
 for (const file of migrationFiles) db.exec(readFileSync(resolve(migrationsDir, file), 'utf8'))
@@ -37,6 +37,11 @@ const expectedTables = [
   'x_post_metric_snapshots',
   'x_posts',
   'x_sync_runs',
+  'opportunities',
+  'calendar_items',
+  'weekly_learnings',
+  'attribution_links',
+  'attribution_events',
 ].sort()
 
 const actualTables = db.prepare(`
@@ -175,6 +180,73 @@ try {
   invalidInboxStatusBlocked = true
 }
 if (!invalidInboxStatusBlocked) throw new Error('x inbox status CHECK constraint is not enforced')
+
+
+db.prepare(`
+  INSERT INTO opportunities (
+    id,workspace_id,account_id,source_type,source_id,title,score,urgency,fit,status,created_at,updated_at
+  ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+`).run('opp_a','ws_test','xac_a','manual','opp_a','Opportunity A',80,90,70,'new',timestamp,timestamp)
+
+let invalidOpportunityScoreBlocked = false
+try {
+  db.prepare(`
+    INSERT INTO opportunities (
+      id,workspace_id,source_type,source_id,title,score,urgency,fit,status,created_at,updated_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+  `).run('opp_bad','ws_test','manual','opp_bad','Bad',101,50,50,'new',timestamp,timestamp)
+} catch {
+  invalidOpportunityScoreBlocked = true
+}
+if (!invalidOpportunityScoreBlocked) throw new Error('opportunity score CHECK constraint is not enforced')
+
+db.prepare(`
+  INSERT INTO calendar_items (
+    id,workspace_id,account_id,opportunity_id,kind,title,scheduled_for,status,created_at,updated_at
+  ) VALUES (?,?,?,?,?,?,?,?,?,?)
+`).run('cal_a','ws_test','xac_a','opp_a','followup','Calendar A',timestamp,'planned',timestamp,timestamp)
+
+let invalidCalendarStatusBlocked = false
+try {
+  db.prepare(`
+    INSERT INTO calendar_items (
+      id,workspace_id,account_id,kind,title,scheduled_for,status,created_at,updated_at
+    ) VALUES (?,?,?,?,?,?,?,?,?)
+  `).run('cal_bad','ws_test','xac_a','manual','Bad',timestamp,'invalid',timestamp,timestamp)
+} catch {
+  invalidCalendarStatusBlocked = true
+}
+if (!invalidCalendarStatusBlocked) throw new Error('calendar status CHECK constraint is not enforced')
+
+db.prepare(`
+  INSERT INTO attribution_links (
+    id,workspace_id,account_id,label,destination_url,tracking_key,active,created_at,updated_at
+  ) VALUES (?,?,?,?,?,?,?,?,?)
+`).run('atl_a','ws_test','xac_a','Link A','https://example.com','track_a',1,timestamp,timestamp)
+
+let duplicateTrackingKeyBlocked = false
+try {
+  db.prepare(`
+    INSERT INTO attribution_links (
+      id,workspace_id,account_id,label,destination_url,tracking_key,active,created_at,updated_at
+    ) VALUES (?,?,?,?,?,?,?,?,?)
+  `).run('atl_b','ws_test','xac_a','Link B','https://example.com/b','track_a',1,timestamp,timestamp)
+} catch {
+  duplicateTrackingKeyBlocked = true
+}
+if (!duplicateTrackingKeyBlocked) throw new Error('attribution tracking key unique constraint is not enforced')
+
+let invalidAttributionEventBlocked = false
+try {
+  db.prepare(`
+    INSERT INTO attribution_events (
+      id,workspace_id,link_id,account_id,kind,occurred_at,created_at
+    ) VALUES (?,?,?,?,?,?,?)
+  `).run('ate_bad','ws_test','atl_a','xac_a','invalid',timestamp,timestamp)
+} catch {
+  invalidAttributionEventBlocked = true
+}
+if (!invalidAttributionEventBlocked) throw new Error('attribution event kind CHECK constraint is not enforced')
 
 db.close()
 console.log(`Migration smoke test passed (${migrationFiles.length} migrations / ${expectedTables.length} tables).`)

@@ -25,8 +25,8 @@ const items = [
   { to: '/approvals', label: '承認待ち', icon: ClipboardCheck, active: true, phase: 3 },
   { to: '/calendar', label: '投稿アシスト', icon: CalendarClock, active: true, phase: 3 },
   { to: '/analytics', label: 'X連携・分析', icon: BarChart3, active: true, phase: 4 },
-  { to: '/revenue', label: '収益', icon: CircleDollarSign, active: false, phase: 5 },
-  { to: '/experiments', label: '実験', icon: FlaskConical, active: false, phase: 5 },
+  { to: '/operations', label: '運用', icon: FlaskConical, active: true, phase: 5 },
+  { to: '/revenue', label: '収益', icon: CircleDollarSign, active: true, phase: 5 },
   { to: '/settings', label: '設定', icon: Settings, active: true },
 ]
 
@@ -86,7 +86,7 @@ export function AppShell() {
           })}
         </nav>
         <div className="sidebar__meta">
-          <span>Phase 4 / 5</span>
+          <span>Phase 5 / 5</span>
           <strong>{session.limits.activeAccountCount} / {session.limits.accountLimit} accounts</strong>
         </div>
       </aside>
@@ -101,7 +101,7 @@ export function AppShell() {
             <small>Personal workspace</small>
           </div>
           <div className="topbar__spacer" />
-          <div className="topbar__phase">Phase 4</div>
+          <div className="topbar__phase">Phase 5</div>
           <button type="button" className="icon-button" aria-label="通知" disabled><Bell size={19} /></button>
           <div className="topbar__user" title={session.user.email}>
             <span className="avatar">{session.user.displayName.slice(0, 1).toUpperCase()}</span>
@@ -113,10 +113,10 @@ export function AppShell() {
 
       <nav className="bottom-nav" aria-label="モバイルナビゲーション">
         <NavLink to="/" end><Home size={20} /><span>ホーム</span></NavLink>
-        <NavLink to="/research"><Search size={20} /><span>リサーチ</span></NavLink>
         <NavLink to="/drafts"><MessageSquareText size={20} /><span>投稿案</span></NavLink>
         <NavLink to="/approvals"><ClipboardCheck size={20} /><span>承認</span></NavLink>
-        <NavLink to="/analytics"><BarChart3 size={20} /><span>分析</span></NavLink>
+        <NavLink to="/operations"><FlaskConical size={20} /><span>運用</span></NavLink>
+        <NavLink to="/revenue"><CircleDollarSign size={20} /><span>収益</span></NavLink>
       </nav>
     </div>
   )
