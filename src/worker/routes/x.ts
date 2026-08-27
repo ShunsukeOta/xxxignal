@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, isNull, lt } from 'drizzle-orm'
 import { Hono } from 'hono'
-import type { XAnalyticsOverview, XConnection, XInboxStatus, XMetricValues, XPostRecord, XSyncKind } from '../../shared/contracts'
+import type { XAccountHealth, XAnalyticsOverview, XConnection, XInboxStatus, XMetricValues, XPostRecord, XSyncKind } from '../../shared/contracts'
 import { createDb } from '../db/client'
 import { xAccounts, xApiCache, xBudgetSettings, xConnections, xCostLedger, xEngagementInbox, xOauthStates, xPostMetricSnapshots, xPosts, xSyncRuns } from '../db/schema'
 import { writeAudit } from '../lib/audit'
@@ -228,7 +228,7 @@ xRoutes.post('/connections/:accountId/disconnect', async (c) => {
 
 xRoutes.post('/sync/posts/:accountId', async (c) => {
   const session = c.get('session'); requireRole(session, canWrite)
-  const accountId = c.req.param('accountId'); const body = await readJson<Record<string, unknown>>(c).catch(() => ({}))
+  const accountId = c.req.param('accountId'); const body: Record<string, unknown> = await readJson<Record<string, unknown>>(c).catch(() => ({} as Record<string, unknown>))
   const limit = clampLimit(body.limit); const force = body.force === true
   const connection = await connectionFor(c, accountId)
   return ok(c, await syncRun(c, 'posts', accountId, limit, async () => {
@@ -267,7 +267,7 @@ xRoutes.post('/sync/posts/:accountId', async (c) => {
 
 xRoutes.post('/sync/mentions/:accountId', async (c) => {
   const session = c.get('session'); requireRole(session, canWrite)
-  const accountId = c.req.param('accountId'); const body = await readJson<Record<string, unknown>>(c).catch(() => ({}))
+  const accountId = c.req.param('accountId'); const body: Record<string, unknown> = await readJson<Record<string, unknown>>(c).catch(() => ({} as Record<string, unknown>))
   const limit = clampLimit(body.limit); const force = body.force === true
   const connection = await connectionFor(c, accountId)
   return ok(c, await syncRun(c, 'mentions', accountId, limit, async () => {
@@ -329,8 +329,8 @@ xRoutes.get('/overview', async (c) => {
   ])
   const health = connections.map((connection) => {
     const expiry = connection.tokenExpiresAt ? Date.parse(connection.tokenExpiresAt) : 0
-    const tokenState = !connection.accessTokenEnc ? 'missing' : expiry <= Date.now() ? 'expired' : expiry - Date.now() < 15 * 60 * 1000 ? 'expiring' : 'valid'
-    const status = connection.status === 'error' || tokenState === 'expired' || tokenState === 'missing' ? 'error' : tokenState === 'expiring' || !connection.lastSyncedAt ? 'warning' : 'healthy'
+    const tokenState: XAccountHealth['tokenState'] = !connection.accessTokenEnc ? 'missing' : expiry <= Date.now() ? 'expired' : expiry - Date.now() < 15 * 60 * 1000 ? 'expiring' : 'valid'
+    const status: XAccountHealth['status'] = connection.status === 'error' || tokenState === 'expired' || tokenState === 'missing' ? 'error' : tokenState === 'expiring' || !connection.lastSyncedAt ? 'warning' : 'healthy'
     return { accountId: connection.accountId, connected: connection.status === 'connected', status, tokenState, lastSyncedAt: connection.lastSyncedAt, lastError: connection.lastError }
   })
   const result: XAnalyticsOverview = {
