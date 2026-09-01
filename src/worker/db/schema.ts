@@ -279,3 +279,184 @@ export const voiceMemories = sqliteTable(
   },
   (table) => [index('idx_voice_memories_account').on(table.accountId, table.archivedAt, table.active, table.createdAt)],
 )
+
+
+export const xConnections = sqliteTable(
+  'x_connections',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    xUserId: text('x_user_id').notNull(),
+    username: text('username').notNull(),
+    displayName: text('display_name').notNull().default(''),
+    accessTokenEnc: text('access_token_enc').notNull(),
+    refreshTokenEnc: text('refresh_token_enc').notNull().default(''),
+    tokenExpiresAt: text('token_expires_at'),
+    scopes: text('scopes').notNull().default(''),
+    status: text('status', { enum: ['connected', 'error', 'revoked'] }).notNull().default('connected'),
+    lastError: text('last_error').notNull().default(''),
+    connectedAt: text('connected_at').notNull(),
+    lastRefreshedAt: text('last_refreshed_at'),
+    lastSyncedAt: text('last_synced_at'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_x_connections_account').on(table.workspaceId, table.accountId),
+    uniqueIndex('uq_x_connections_x_user').on(table.workspaceId, table.xUserId),
+    index('idx_x_connections_workspace_status').on(table.workspaceId, table.status, table.updatedAt),
+  ],
+)
+
+export const xOauthStates = sqliteTable(
+  'x_oauth_states',
+  {
+    state: text('state').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    codeVerifierEnc: text('code_verifier_enc').notNull(),
+    redirectUri: text('redirect_uri').notNull(),
+    expiresAt: text('expires_at').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [index('idx_x_oauth_states_expires').on(table.expiresAt)],
+)
+
+export const xPosts = sqliteTable(
+  'x_posts',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    xPostId: text('x_post_id').notNull(),
+    text: text('text').notNull().default(''),
+    conversationId: text('conversation_id').notNull().default(''),
+    lang: text('lang').notNull().default(''),
+    xCreatedAt: text('x_created_at'),
+    publicMetricsJson: text('public_metrics_json').notNull().default('{}'),
+    nonPublicMetricsJson: text('non_public_metrics_json').notNull().default('{}'),
+    organicMetricsJson: text('organic_metrics_json').notNull().default('{}'),
+    fetchedAt: text('fetched_at').notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_x_posts_workspace_post').on(table.workspaceId, table.xPostId),
+    index('idx_x_posts_account_created').on(table.accountId, table.xCreatedAt, table.updatedAt),
+  ],
+)
+
+export const xPostMetricSnapshots = sqliteTable(
+  'x_post_metric_snapshots',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    postId: text('post_id').notNull().references(() => xPosts.id, { onDelete: 'cascade' }),
+    capturedAt: text('captured_at').notNull(),
+    impressionCount: integer('impression_count').notNull().default(0),
+    likeCount: integer('like_count').notNull().default(0),
+    replyCount: integer('reply_count').notNull().default(0),
+    repostCount: integer('repost_count').notNull().default(0),
+    quoteCount: integer('quote_count').notNull().default(0),
+    bookmarkCount: integer('bookmark_count').notNull().default(0),
+    urlLinkClicks: integer('url_link_clicks').notNull().default(0),
+    userProfileClicks: integer('user_profile_clicks').notNull().default(0),
+  },
+  (table) => [
+    index('idx_x_metric_snapshots_post_time').on(table.postId, table.capturedAt),
+    index('idx_x_metric_snapshots_account_time').on(table.accountId, table.capturedAt),
+  ],
+)
+
+export const xApiCache = sqliteTable(
+  'x_api_cache',
+  {
+    cacheKey: text('cache_key').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => xAccounts.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull(),
+    responseJson: text('response_json').notNull(),
+    expiresAt: text('expires_at').notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [index('idx_x_api_cache_workspace_expires').on(table.workspaceId, table.expiresAt)],
+)
+
+export const xCostLedger = sqliteTable(
+  'x_cost_ledger',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => xAccounts.id, { onDelete: 'set null' }),
+    provider: text('provider').notNull().default('x'),
+    operation: text('operation').notNull(),
+    endpoint: text('endpoint').notNull(),
+    resourceType: text('resource_type').notNull().default(''),
+    units: integer('units').notNull().default(0),
+    unitCostMicrousd: integer('unit_cost_microusd').notNull().default(0),
+    estimatedCostMicrousd: integer('estimated_cost_microusd').notNull().default(0),
+    pricingVersion: text('pricing_version').notNull(),
+    requestId: text('request_id').notNull().default(''),
+    metadataJson: text('metadata_json').notNull().default('{}'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_x_cost_ledger_workspace_time').on(table.workspaceId, table.createdAt),
+    index('idx_x_cost_ledger_account_time').on(table.accountId, table.createdAt),
+  ],
+)
+
+export const xBudgetSettings = sqliteTable(
+  'x_budget_settings',
+  {
+    workspaceId: text('workspace_id').primaryKey().notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    monthlyBudgetMicrousd: integer('monthly_budget_microusd').notNull().default(5_000_000),
+    warningPercent: integer('warning_percent').notNull().default(80),
+    hardLimitEnabled: integer('hard_limit_enabled', { mode: 'boolean' }).notNull().default(true),
+    updatedAt: text('updated_at').notNull(),
+    updatedByUserId: text('updated_by_user_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  },
+)
+
+export const xSyncRuns = sqliteTable(
+  'x_sync_runs',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: ['posts', 'mentions'] }).notNull(),
+    status: text('status', { enum: ['running', 'success', 'error', 'blocked'] }).notNull(),
+    requestedLimit: integer('requested_limit').notNull().default(0),
+    returnedCount: integer('returned_count').notNull().default(0),
+    estimatedCostMicrousd: integer('estimated_cost_microusd').notNull().default(0),
+    errorMessage: text('error_message').notNull().default(''),
+    startedAt: text('started_at').notNull(),
+    finishedAt: text('finished_at'),
+  },
+  (table) => [index('idx_x_sync_runs_account_time').on(table.accountId, table.startedAt)],
+)
+
+export const xEngagementInbox = sqliteTable(
+  'x_engagement_inbox',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    xPostId: text('x_post_id').notNull(),
+    authorId: text('author_id').notNull().default(''),
+    text: text('text').notNull().default(''),
+    xCreatedAt: text('x_created_at'),
+    publicMetricsJson: text('public_metrics_json').notNull().default('{}'),
+    status: text('status', { enum: ['new', 'read', 'acted', 'ignored'] }).notNull().default('new'),
+    firstSeenAt: text('first_seen_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_x_engagement_inbox_post').on(table.workspaceId, table.accountId, table.xPostId),
+    index('idx_x_engagement_inbox_account_status').on(table.accountId, table.status, table.xCreatedAt),
+  ],
+)

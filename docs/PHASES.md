@@ -2,7 +2,7 @@
 
 ## Progress
 
-**3 / 5 = 60%**
+**4 / 5 = 80%**
 
 ## Phase 1 — Core Foundation ✅
 
@@ -45,7 +45,7 @@ Goal: Research → Draft → Human Review → Manual Publish Assistを完成さ�
 - Manual Publish Assist
 - Phase 3 migration / smoke test
 
-## Phase 4 — X OAuth, Analytics & Cost
+## Phase 4 — X OAuth, Analytics & Cost ✅
 
 Goal: 3アカウントを公式OAuthで接続し、必要最小限のX APIだけ利用する。
 

@@ -2,19 +2,56 @@
 
 個人向け・複数アカウント対応のX運用OS。
 
-現在は **Phase 3 — Content Studio 完了**。最大3アカウントのStrategy / Voiceを分離し、Research Poolから投稿案を作成、Version管理、人間承認、Voice Memory、手動投稿アシストまで一連で運用できます。
+現在は **Phase 4 — X OAuth, Analytics & Cost 完了**。最大3アカウントを公式OAuthで接続し、Own Posts / Mentionsを必要時だけ同期、Metrics・Account Health・API Cache・Cost Ledger・Budget Guardまで管理できます。
 
 ## MVP進捗
 
-**3 / 5 Phase 完了（60%）**
+**4 / 5 Phase 完了（80%）**
 
 | Phase | 状態 | 内容 |
 |---|---|---|
 | Phase 1 — Core Foundation | ✅ 完了 | User / Workspace / 3 X Accounts / Strategy / Voice / Audit / PC・SP UI |
 | Phase 2 — Research & X Viewer | ✅ 完了 | Shared Research Pool / RSS / Web / X Targets / X公式公開Embed Viewer |
 | Phase 3 — Content Studio | ✅ 完了 | AI Provider / Draft Versioning / Duplicate Guard / Human Review / Voice Memory / Manual Publish Assist |
-| Phase 4 — X OAuth, Analytics & Cost | ⏳ 未着手 | 公式X OAuth / Metrics / Cost Ledger / Budget Guard / API Cache |
+| Phase 4 — X OAuth, Analytics & Cost | ✅ 完了 | OAuth 2.0 PKCE / 暗号化Token / Own Posts / Mentions / Metrics / Cost Ledger / Budget Guard / API Cache |
 | Phase 5 — Production MVP | ⏳ 未着手 | Opportunity / Calendar / Weekly Learning / Revenue Attribution / Export・Backup |
+
+## Phase 4でできること
+
+- 公式OAuth 2.0 Authorization Code + PKCEで最大3アカウント接続
+- `tweet.read users.read offline.access` の最小scope
+- Access / Refresh TokenをAES-256-GCMで暗号化
+- Token期限前の自動Refresh
+- 登録handleと認証X usernameの一致確認
+- Own Postsを手動同期
+- Public / Non-public / Organic Metricsの保存
+- Metrics Snapshot履歴
+- MentionsをEngagement候補Inboxへ保存
+- 自動Reply / Like / Followは行わない
+- API Cache（通常10分）
+- X API Cost Ledger
+- 月額Budget / Warning / Hard Limit
+- API request前のworst-case cost preflight
+- Connection / Token / Last Sync / ErrorによるAccount Health
+- PC / SP対応Analytics UI
+
+Phase 4でもX API同期は**ユーザーが明示的に押した時だけ**実行します。Cronによる自動課金は入れていません。
+
+### Phase 4必須Secret
+
+```dotenv
+X_CLIENT_ID=...
+X_CLIENT_SECRET=...
+X_REDIRECT_URI=https://your-domain.example/api/x/oauth/callback
+X_TOKEN_ENCRYPTION_KEY=...
+X_SCOPES=tweet.read users.read offline.access
+```
+
+`X_TOKEN_ENCRYPTION_KEY` は32byte乱数をBase64化して設定します。未設定時にTokenを平文保存するFallbackはありません。
+
+### Cost Ledgerについて
+
+Cost LedgerはDeveloper Consoleの請求額そのものではなく、取得resource数と公式価格スナップショットから計算する**保守的な推定**です。Owned Readの割引条件を自動仮定せず、標準単価で見積もります。
 
 ## Phase 3でできること
 
@@ -95,7 +132,7 @@ npm run db:migrate:local
 npm run test:db
 ```
 
-`test:db` はPhase 1〜3のMigrationをインメモリSQLiteへ適用し、主要制約を検証します。
+`test:db` はPhase 1〜4のMigrationをインメモリSQLiteへ適用し、主要制約を検証します。
 
 ### Start
 
@@ -143,18 +180,9 @@ npm run deploy
 
 > GitHub Actions / CI workflowはリポジトリに含めていません。デプロイは明示的に実行します。
 
-## Phase 4 — X OAuth, Analytics & Cost
+## Phase 4 — X OAuth, Analytics & Cost ✅
 
-公式X APIを必要最小限だけ接続します。
-
-- OAuth 2.0 PKCE / User Context
-- 3アカウント接続
-- Own Post / Metrics取得
-- API Cache
-- Cost Ledger
-- 月額Budget / Hard Limit
-- Account Health
-- Engagement候補Inbox
+公式OAuth、Own Posts / Mentions同期、Metrics、API Cache、Cost Ledger、Budget Guard、Account Healthを実装済みです。詳細は [Phase 4](docs/PHASE4.md) を参照してください。
 
 ## Phase 5 — Production MVP
 
@@ -179,4 +207,4 @@ npm run deploy
 - AI ProviderをAdapter化し、特定ベンダーへ密結合しない
 - SecretをAudit Log / Draft Versionへ保存しない
 
-詳細: [Architecture](docs/ARCHITECTURE.md) / [Phase 2](docs/PHASE2.md) / [Phase 3](docs/PHASE3.md) / [Design System](docs/DESIGN_SYSTEM.md) / [5 Phases](docs/PHASES.md)
+詳細: [Architecture](docs/ARCHITECTURE.md) / [Phase 2](docs/PHASE2.md) / [Phase 3](docs/PHASE3.md) / [Phase 4](docs/PHASE4.md) / [Design System](docs/DESIGN_SYSTEM.md) / [5 Phases](docs/PHASES.md)

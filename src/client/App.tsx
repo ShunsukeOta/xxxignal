@@ -4,6 +4,7 @@ import { SessionProvider } from './components/SessionProvider'
 import { ToastProvider } from './components/Toast'
 import { AccountsPage } from './pages/AccountsPage'
 import { ApprovalQueuePage } from './pages/ApprovalQueuePage'
+import { AnalyticsPage } from './pages/AnalyticsPage'
 import { ContentStudioPage } from './pages/ContentStudioPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { PublishAssistPage } from './pages/PublishAssistPage'
@@ -23,6 +24,7 @@ export default function App() {
               <Route path="/drafts" element={<ContentStudioPage />} />
               <Route path="/approvals" element={<ApprovalQueuePage />} />
               <Route path="/calendar" element={<PublishAssistPage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
