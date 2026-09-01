@@ -2,7 +2,7 @@
 
 ## Progress
 
-**4 / 5 = 80%**
+**5 / 5 = 100%**
 
 ## Phase 1 — Core Foundation ✅
 
@@ -58,14 +58,15 @@ Goal: 3アカウントを公式OAuthで接続し、必要最小限のX APIだけ
 - Account Health
 - Engagement candidate inbox
 
-## Phase 5 — Production MVP
+## Phase 5 — Production MVP ✅
 
-Goal: 3アカウントを1人で毎日運用できる。
+Goal: 3アカウントを1人で毎日運用できるProduction MVPを完成させる。
 
 - Opportunity ranking
 - Calendar / queue
 - Weekly learning
 - Cross-account duplicate / engagement guard
-- Conversion / Revenue attribution foundation
-- Export / backup
-- Production dashboard polish
+- Click / Conversion / Revenue attribution
+- Secret-safe Export / backup
+- Production dashboard
+- Phase 4 X route registration hardening

@@ -16,11 +16,12 @@ function trimText(value: string, max: number) {
   return normalized.length <= max ? normalized : `${normalized.slice(0, max - 1)}…`
 }
 
-function sourceTopic(context: AiGenerationContext) {
+function sourceTopic(context: AiGenerationContext): string {
   const item = context.researchItem
   if (item?.title) return item.title
   if (context.instruction.trim()) return context.instruction.trim()
-  if (context.account.strategy.contentPillars.length) return context.account.strategy.contentPillars[0]
+  const firstPillar = context.account.strategy.contentPillars[0]
+  if (firstPillar) return firstPillar
   return context.account.niche || 'このテーマ'
 }
 

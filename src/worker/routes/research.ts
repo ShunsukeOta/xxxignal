@@ -31,7 +31,8 @@ function safeHttpUrl(raw: string) {
   if (host.includes(':')) throw new AppError(400, 'ipv6_literal_not_allowed', 'IPv6リテラルURLはRSS Sourceに利用できません。')
   const parts = host.split('.').map(Number)
   if (parts.length === 4 && parts.every((part) => Number.isInteger(part) && part >= 0 && part <= 255)) {
-    const [a, b] = parts
+    const a = parts[0] ?? -1
+    const b = parts[1] ?? -1
     if (a === 10 || a === 127 || a === 0 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) {
       throw new AppError(400, 'private_url_not_allowed', 'プライベート/特殊用途IPは利用できません。')
     }
@@ -139,7 +140,11 @@ function firstTag(block: string, names: string[]) {
 }
 
 function parseFeed(xml: string) {
-  const blocks = [...xml.matchAll(/<(item|entry)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi)].slice(0, 50).map((match) => match[2])
+  const blocks = [...xml.matchAll(/<(item|entry)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi)]
+    .slice(0, 50)
+    .map((match) => match[2])
+    .filter((block): block is string => typeof block === 'string')
+
   return blocks.map((block) => {
     const title = firstTag(block, ['title']) || '無題'
     let url = firstTag(block, ['link'])
@@ -219,11 +224,34 @@ researchRoutes.post('/sources/:id/sync', async (c) => {
 })
 
 async function archiveEntity(c: Context<AppEnv>, type: 'source' | 'target' | 'item', restore: boolean) {
-  const session = c.get('session'); requireRole(session, canWrite); const db = createDb(c.env); const timestamp = now(); const entityId = c.req.param('id')
-  const table = type === 'source' ? researchSources : type === 'target' ? researchTargets : researchItems
-  const [existing] = await db.select({ id: table.id }).from(table).where(and(eq(table.id, entityId), eq(table.workspaceId, session.workspace.id))).limit(1)
-  if (!existing) throw new AppError(404, 'research_entity_not_found', '対象データが見つかりません。')
-  await db.update(table).set({ archivedAt: restore ? null : timestamp, updatedAt: timestamp }).where(and(eq(table.id, entityId), eq(table.workspaceId, session.workspace.id)))
+  const session = c.get('session')
+  requireRole(session, canWrite)
+  const db = createDb(c.env)
+  const timestamp = now()
+  const entityId = c.req.param('id')
+  if (!entityId) throw new AppError(400, 'research_entity_id_required', '対象IDがありません。')
+  const archivedAt = restore ? null : timestamp
+
+  if (type === 'source') {
+    const [existing] = await db.select({ id: researchSources.id }).from(researchSources)
+      .where(and(eq(researchSources.id, entityId), eq(researchSources.workspaceId, session.workspace.id))).limit(1)
+    if (!existing) throw new AppError(404, 'research_entity_not_found', '対象データが見つかりません。')
+    await db.update(researchSources).set({ archivedAt, updatedAt: timestamp })
+      .where(and(eq(researchSources.id, entityId), eq(researchSources.workspaceId, session.workspace.id)))
+  } else if (type === 'target') {
+    const [existing] = await db.select({ id: researchTargets.id }).from(researchTargets)
+      .where(and(eq(researchTargets.id, entityId), eq(researchTargets.workspaceId, session.workspace.id))).limit(1)
+    if (!existing) throw new AppError(404, 'research_entity_not_found', '対象データが見つかりません。')
+    await db.update(researchTargets).set({ archivedAt, updatedAt: timestamp })
+      .where(and(eq(researchTargets.id, entityId), eq(researchTargets.workspaceId, session.workspace.id)))
+  } else {
+    const [existing] = await db.select({ id: researchItems.id }).from(researchItems)
+      .where(and(eq(researchItems.id, entityId), eq(researchItems.workspaceId, session.workspace.id))).limit(1)
+    if (!existing) throw new AppError(404, 'research_entity_not_found', '対象データが見つかりません。')
+    await db.update(researchItems).set({ archivedAt, updatedAt: timestamp })
+      .where(and(eq(researchItems.id, entityId), eq(researchItems.workspaceId, session.workspace.id)))
+  }
+
   await writeAudit(c.env, session, { action: `research_${type}.${restore ? 'restored' : 'archived'}`, entityType: `research_${type}`, entityId })
   return ok(c, { archived: !restore })
 }

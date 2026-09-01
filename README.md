@@ -2,11 +2,11 @@
 
 個人向け・複数アカウント対応のX運用OS。
 
-現在は **Phase 4 — X OAuth, Analytics & Cost 完了**。最大3アカウントを公式OAuthで接続し、Own Posts / Mentionsを必要時だけ同期、Metrics・Account Health・API Cache・Cost Ledger・Budget Guardまで管理できます。
+現在は **Phase 5 — Production MVP 完了**。最大3アカウントのResearch・投稿制作・Human Review・X OAuth/Analytics・Opportunity・Calendar・Weekly Learning・Revenue Attribution・Backupまでを一つの運用OSとして管理できます。
 
 ## MVP進捗
 
-**4 / 5 Phase 完了（80%）**
+**5 / 5 Phase 完了（100%）**
 
 | Phase | 状態 | 内容 |
 |---|---|---|
@@ -14,9 +14,9 @@
 | Phase 2 — Research & X Viewer | ✅ 完了 | Shared Research Pool / RSS / Web / X Targets / X公式公開Embed Viewer |
 | Phase 3 — Content Studio | ✅ 完了 | AI Provider / Draft Versioning / Duplicate Guard / Human Review / Voice Memory / Manual Publish Assist |
 | Phase 4 — X OAuth, Analytics & Cost | ✅ 完了 | OAuth 2.0 PKCE / 暗号化Token / Own Posts / Mentions / Metrics / Cost Ledger / Budget Guard / API Cache |
-| Phase 5 — Production MVP | ⏳ 未着手 | Opportunity / Calendar / Weekly Learning / Revenue Attribution / Export・Backup |
+| Phase 5 — Production MVP | ✅ 完了 | Opportunity / Calendar / Weekly Learning / Cross-account Guard / Revenue Attribution / Export・Backup |
 
-## Phase 4でできること
+## Phase 5でできること\n\n- Research / MentionからOpportunityをローカルランキング\n- Opportunity → Calendar / Queueへ予定化\n- 承認済みDraftをCalendarへ任意で紐付け\n- 保存済みX MetricsからWeekly Learningを生成\n- 別アカウント間のCross-account Duplicate Guard\n- 同一Mentionへの複数アカウント接触候補を警告\n- `/r/{tracking_key}` によるClick Attribution\n- Conversion / Revenueの手動記録\n- 通貨別Revenue集計\n- Secretを除外したWorkspace JSON Backup\n- SHA-256 checksum付きExport\n- Phase 1〜5を統合したProduction Dashboard\n- Phase 5固有の追加外部APIコスト **0円**\n\nPhase 5でも自動Like / Follow / Reply / 投稿は行いません。X API ReadはPhase 4で実装した明示同期操作だけです。\n## Phase 4でできること
 
 - 公式OAuth 2.0 Authorization Code + PKCEで最大3アカウント接続
 - `tweet.read users.read offline.access` の最小scope
@@ -132,7 +132,7 @@ npm run db:migrate:local
 npm run test:db
 ```
 
-`test:db` はPhase 1〜4のMigrationをインメモリSQLiteへ適用し、主要制約を検証します。
+`test:db` はPhase 1〜5のMigrationをインメモリSQLiteへ適用し、主要制約を検証します。
 
 ### Start
 
@@ -205,6 +205,6 @@ npm run deploy
 - Draft / Research / Accountは物理削除よりArchiveを優先する
 - 全運用データを `workspace_id` で分離する
 - AI ProviderをAdapter化し、特定ベンダーへ密結合しない
-- SecretをAudit Log / Draft Versionへ保存しない
+- SecretをAudit Log / Draft Versionへ保存しない\n- Workspace ExportからX Token / API Secret / Encryption Keyを必ず除外する\n- Phase 5のOpportunity / Learning / Cross Guardは保存済みデータだけでローカル計算する
 
-詳細: [Architecture](docs/ARCHITECTURE.md) / [Phase 2](docs/PHASE2.md) / [Phase 3](docs/PHASE3.md) / [Phase 4](docs/PHASE4.md) / [Design System](docs/DESIGN_SYSTEM.md) / [5 Phases](docs/PHASES.md)
+詳細: [Architecture](docs/ARCHITECTURE.md) / [Phase 2](docs/PHASE2.md) / [Phase 3](docs/PHASE3.md) / [Phase 4](docs/PHASE4.md) / [Phase 5](docs/PHASE5.md) / [Design System](docs/DESIGN_SYSTEM.md) / [5 Phases](docs/PHASES.md)

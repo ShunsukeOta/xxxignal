@@ -460,3 +460,112 @@ export const xEngagementInbox = sqliteTable(
     index('idx_x_engagement_inbox_account_status').on(table.accountId, table.status, table.xCreatedAt),
   ],
 )
+
+export const opportunities = sqliteTable(
+  'opportunities',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => xAccounts.id, { onDelete: 'set null' }),
+    sourceType: text('source_type', { enum: ['research', 'mention', 'manual'] }).notNull(),
+    sourceId: text('source_id').notNull().default(''),
+    title: text('title').notNull(),
+    summary: text('summary').notNull().default(''),
+    score: integer('score').notNull().default(0),
+    urgency: integer('urgency').notNull().default(0),
+    fit: integer('fit').notNull().default(0),
+    evidenceJson: text('evidence_json').notNull().default('{}'),
+    status: text('status', { enum: ['new', 'planned', 'done', 'dismissed'] }).notNull().default('new'),
+    scheduledAt: text('scheduled_at'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_opportunities_source').on(table.workspaceId, table.sourceType, table.sourceId),
+    index('idx_opportunities_workspace_score').on(table.workspaceId, table.status, table.score, table.updatedAt),
+    index('idx_opportunities_account').on(table.accountId, table.status, table.score),
+  ],
+)
+
+export const calendarItems = sqliteTable(
+  'calendar_items',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    draftId: text('draft_id').references(() => contentDrafts.id, { onDelete: 'set null' }),
+    opportunityId: text('opportunity_id').references(() => opportunities.id, { onDelete: 'set null' }),
+    kind: text('kind', { enum: ['publish', 'followup', 'research', 'manual'] }).notNull(),
+    title: text('title').notNull(),
+    scheduledFor: text('scheduled_for').notNull(),
+    status: text('status', { enum: ['planned', 'done', 'cancelled'] }).notNull().default('planned'),
+    notes: text('notes').notNull().default(''),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    index('idx_calendar_workspace_time').on(table.workspaceId, table.status, table.scheduledFor),
+    index('idx_calendar_account_time').on(table.accountId, table.status, table.scheduledFor),
+  ],
+)
+
+export const weeklyLearnings = sqliteTable(
+  'weekly_learnings',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => xAccounts.id, { onDelete: 'cascade' }),
+    weekStart: text('week_start').notNull(),
+    scope: text('scope', { enum: ['workspace', 'account'] }).notNull(),
+    summary: text('summary').notNull().default(''),
+    winnersJson: text('winners_json').notNull().default('[]'),
+    observationsJson: text('observations_json').notNull().default('[]'),
+    recommendationsJson: text('recommendations_json').notNull().default('[]'),
+    sampleSize: integer('sample_size').notNull().default(0),
+    generatedAt: text('generated_at').notNull(),
+  },
+  (table) => [
+    index('idx_weekly_learnings_workspace_week').on(table.workspaceId, table.weekStart, table.scope),
+    index('idx_weekly_learnings_account_week').on(table.accountId, table.weekStart),
+  ],
+)
+
+export const attributionLinks = sqliteTable(
+  'attribution_links',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    draftId: text('draft_id').references(() => contentDrafts.id, { onDelete: 'set null' }),
+    label: text('label').notNull(),
+    destinationUrl: text('destination_url').notNull(),
+    trackingKey: text('tracking_key').notNull().unique(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [index('idx_attribution_links_workspace').on(table.workspaceId, table.accountId, table.active)],
+)
+
+export const attributionEvents = sqliteTable(
+  'attribution_events',
+  {
+    id: text('id').primaryKey().notNull(),
+    workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+    linkId: text('link_id').notNull().references(() => attributionLinks.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull().references(() => xAccounts.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: ['click', 'conversion', 'revenue'] }).notNull(),
+    amountMicros: integer('amount_micros').notNull().default(0),
+    currency: text('currency').notNull().default('JPY'),
+    occurredAt: text('occurred_at').notNull(),
+    source: text('source').notNull().default('manual'),
+    metadataJson: text('metadata_json').notNull().default('{}'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_attribution_events_workspace_time').on(table.workspaceId, table.occurredAt),
+    index('idx_attribution_events_link_time').on(table.linkId, table.occurredAt),
+    index('idx_attribution_events_account_time').on(table.accountId, table.occurredAt),
+  ],
+)
+
